@@ -19,7 +19,7 @@ services:
       - sf-redis
       - sf-queue-redis
   sf-php-cli:
-    build: ./docker/dev/php/7.3/cli
+    build: ./docker/development/php/7.3/cli
     container_name: sf-php-cli
     volumes:
       - ./app:/app
@@ -32,7 +32,7 @@ services:
       - "9000:9001"
   sf-queue-worker:
     build:
-      context: ./docker/dev/php/7.3/cli
+      context: ./docker/development/php/7.3/cli
     container_name: sf-queue-worker
     volumes:
       - ./app:/app:rw,cached

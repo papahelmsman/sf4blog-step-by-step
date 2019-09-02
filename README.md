@@ -93,10 +93,10 @@ production
 ```
 FROM nginx:1.17.2-alpine
 
-LABEL maintainer="Pavel A. Petrovv <papahelmsman@gmail.com>"
+LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY conf.d/sf4d.conf /etc/nginx/conf.d/sf4d.conf
+COPY conf.d/symfony.conf /etc/nginx/conf.d/symfony.conf
 RUN rm /etc/nginx/conf.d/default.conf
 
 WORKDIR /app
@@ -340,13 +340,51 @@ volumes:
   composer:
 ```
 Создадим директорию **app** для кода нашего приложения
-Затем добавим index-файл в каталоге /public для тестирования работы нашего окружения
+Затем добавим файлы index.php и info.php в каталоге /public для тестирования работы нашего окружения
 
-##### //app/
+##### //app/public/index.php
+```php
+<?php
+echo 'Congratulations! It works!!!';
 ```
-xdebug.remote_enable=1
-xdebug.remote_port=9000
-xdebug.remote_autostart=1
-xdebug.remote_connect_back=0
-xdebug.idekey=editor-xdebug
+
+##### //app/public/info.php
+```php
+<?php
+phpinfo();
 ```
+
+Добавим в host-файл системы наш локальный домен
+```
+192.168.99.100 sf4blog.dockerhost
+```
+
+```
+docker-compose build
+```
+
+```
+docker-compose up -d
+```
+
+После завершения сборки контейнеров Docker можно проверить работу окружения.
+
+Вводим в командной строке браузера:
+```
+http://sf4blog.dockerhost/
+```
+
+и  получаем:
+
+**Congratulations! It works!!!**
+
+Поздавляю Вас! Наше окружение готово к установке шаблона Symfony!
+
+Отметимся в git^
+
+```
+git status
+git add .
+git commit -m "Docker-compose ready to work" 
+```
+
