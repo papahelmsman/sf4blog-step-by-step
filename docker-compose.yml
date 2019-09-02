@@ -1,0 +1,101 @@
+version: "3.7"
+services:
+  sf-nginx:
+    build: ./docker/development/nginx
+    container_name: sf-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./app/public:/app/public:ro
+    depends_on:
+      - sf-php-fpm
+  sf-php-fpm:
+    build: ./docker/development/php/7.3/fpm
+    container_name: sf-php-fpm
+    volumes:
+      - ./app:/app:rw,cached
+    depends_on:
+      - sf-db
+      - sf-redis
+      - sf-queue-redis
+  sf-php-cli:
+    build: ./docker/dev/php/7.3/cli
+    container_name: sf-php-cli
+    volumes:
+      - ./app:/app
+      - composer:/root/.composer/cache
+    depends_on:
+      - sf-db
+      - sf-redis
+      - sf-queue-redis
+    ports:
+      - "9000:9001"
+  sf-queue-worker:
+    build:
+      context: ./docker/dev/php/7.3/cli
+    container_name: sf-queue-worker
+    volumes:
+      - ./app:/app:rw,cached
+      - composer:/root/.composer/cache
+    depends_on:
+      - sf-db
+      - sf-redis
+      - sf-queue-redis
+    command: sh -c "until [ -f .ready ] ; do sleep 1 ; done && php bin/console messenger:consume async -vv"
+  sf-node-watch:
+    image: node:12.7-alpine
+    container_name: sf-node-watch
+    volumes:
+      - ./app:/app:rw,cached
+    working_dir: /app
+    command: sh -c "until [ -f .ready ] ; do sleep 1 ; done && npm run watch"
+
+  sf-node:
+    image: node:12.7-alpine
+    container_name: sf-node
+    volumes:
+      - ./app:/app:rw,cached
+    working_dir: /app
+  sf-db:
+    image: postgres:11.2-alpine
+    container_name: sf-db
+    volumes:
+      - db-data:/var/lib/postgresql/data:rw
+    environment:
+      POSTGRES_USER: symfonist
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: blog_db
+    ports:
+      - "54321:5432"
+  sf-adminer:
+    image: adminer
+    container_name: sf-adminer
+    depends_on:
+      - sf-db
+    restart: always
+    ports:
+      - "2000:8080"
+  sf-redis:
+    image: redis:5-alpine
+    container_name: sf-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    command:
+      - 'redis-server'
+      - '--databases 2'
+      - '--save 900 1'
+      - '--save 300 10'
+      - '--save 60 10000'
+      - '--requirepass secret'
+  sf-queue-redis:
+    image: redis:5.0-alpine
+    container_name: sf-queue-redis
+    volumes:
+      - queue-redis:/data
+volumes:
+  db-data:
+  redis:
+  queue-redis:
+  composer:
