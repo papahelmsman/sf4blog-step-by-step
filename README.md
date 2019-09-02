@@ -540,13 +540,17 @@ git status
 <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
 ```
 
-
+#### Profiler Pack
 
 ```
 docker-compose run --rm sf-php-cli composer require profiler --dev
 ```
 
+#### Debug Pack
 
+```
+docker-compose run --rm sf-php-cli composer require debug --dev
+```
 
 
 
