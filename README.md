@@ -552,9 +552,14 @@ docker-compose run --rm sf-php-cli composer require profiler --dev
 docker-compose run --rm sf-php-cli composer require debug --dev
 ```
 
+```
+docker-compose run --rm sf-php-cli composer unpack debug
+```
 
+#### Assets
 
-
-
+```
+docker-compose run --rm sf-php-cli composer require asset
+```
 
 
