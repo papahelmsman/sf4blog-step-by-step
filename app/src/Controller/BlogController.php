@@ -6,11 +6,27 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
 
 class BlogController extends AbstractController
 {
-    public function  homepage()
+    /**
+     * @Route("/")
+     */
+    public function index(): Response
     {
-        return new Response('OMG! This is my Blog\'s Homepage.');
+        return $this->render('blog/homepage.html.twig');
+    }
+
+    /**
+     * @Route("/news/{slug}")
+     */
+    public function show($slug)
+    {
+        return new Response(sprintf(
+            'Future page to show the article: %s',
+            $slug
+        ));
     }
 }

@@ -8,7 +8,9 @@
 2. Использовать в работе самые свежие или близкие к ним инструменты разработки
     Nginx 1.17 +
     PHP 7.3 +
-    PostgreSQL 12 +
+    PostgreSQL 11.2 +
+    Redis 5
+    NodeJS 
 
 Предвариетльные требования
 
@@ -487,10 +489,7 @@ Key Promoter X
 
 2. 
 
-Чтобы убедиться, что наше приложение не имеет установленных зависимостей с известными уязвимостями безопасности, установим следующий пакет:
-```
-docker-compose run --rm sf-php-cli composer require --dev roave/security-advisories:dev-master
-```
+
 
 ```
 docker-compose run --rm sf-php-cli composer require sec-checker
@@ -560,21 +559,21 @@ git status
 
 #### Profiler Pack
 
-```
+```bash
 docker-compose run --rm sf-php-cli composer require profiler --dev
 ```
 
 #### Debug Pack
 
-```
+```bash
 docker-compose run --rm sf-php-cli composer require debug --dev
 ```
 
-```
+```bash
 docker-compose run --rm sf-php-cli composer unpack debug
 ```
 
-```
+```bash
 docker-compose run --rm sf-php-cli composer unpack profiler
 ```
 
@@ -582,8 +581,58 @@ docker-compose run --rm sf-php-cli composer unpack profiler
 
 #### Assets
 
-```
+```bash
 docker-compose run --rm sf-php-cli composer require asset
 ```
 
+#### ORM
 
+```bash
+docker-compose run --rm sf-php-cli composer require asset
+```
+
+В качестве СУБД  мы будем использовать PostgreSQL, поэтому произведем следующие настройки:
+
+1. Откроем файл /app/config/package/doctrine.yaml
+
+В начале файла добавим секцию:
+
+```yaml
+parameters:
+    # Adds a fallback DATABASE_URL if the env var is not set.
+    # This allows you to run cache:warmup even if your
+    # environment variables are not available yet.
+    # You should not need to change this value.
+    env(DATABASE_URL): ''
+    
+```
+
+Заменим в нём секцию
+```yaml
+    dbal:
+        # configure these for your database server
+        driver: 'pdo_mysql'
+        server_version: '5.7'
+        charset: utf8mb4
+        default_table_options:
+            charset: utf8mb4
+            collate: utf8mb4_unicode_ci
+
+        url: '%env(resolve:DATABASE_URL)%'
+```
+
+на
+```yaml
+    dbal:
+        # configure these for your database server
+        driver: 'pdo_pgsql'
+        server_version: '11.2'
+        charset: utf8
+        default_table_options:
+            charset: utf8
+            collate: ~
+
+        url: '%env(resolve:DATABASE_URL)%'
+
+        schema_filter: '~^(?!work_projects_tasks_seq)~'
+```
