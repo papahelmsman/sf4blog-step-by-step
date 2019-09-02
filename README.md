@@ -519,6 +519,32 @@ No packages have known vulnerabilities.
 docker-compose run --rm sf-php-cli composer require twig
 ```
 
+Если мы выполним команду 
+```
+git status
+```
+то увидим изменения после установки данного компонента:
+
+Это:
+- конфигурационный файл twig.yaml
+- /routes/dev/twig.yaml
+- новый каталог проекта templates с первым предустановленным шаблоном base.html.twig
+
+Немного поработаем над основным шаблоном
+
+Во-первых, добавим в папку /public нашего проекта иконку для браузера favicon.png и добавим ее в шаблон.
+
+Для этого в файле base.html.twig добавим строку:
+
+```html
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+```
+
+
+
+```
+docker-compose run --rm sf-php-cli composer require profiler --dev
+```
 
 
 
