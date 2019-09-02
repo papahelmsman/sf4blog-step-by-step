@@ -515,6 +515,24 @@ No packages have known vulnerabilities.
 
 
 
+#### Annotations
+
+
+```
+docker-compose run --rm sf-php-cli rm -rf /app/var/cache/dev/*
+```
+
+Установим пакеты **annotations**
+```
+docker-compose run --rm sf-php-cli composer require annotations
+```
+
+```
+git status
+```
+
+#### Twig
+
 ```
 docker-compose run --rm sf-php-cli composer require twig
 ```
@@ -555,6 +573,12 @@ docker-compose run --rm sf-php-cli composer require debug --dev
 ```
 docker-compose run --rm sf-php-cli composer unpack debug
 ```
+
+```
+docker-compose run --rm sf-php-cli composer unpack profiler
+```
+
+
 
 #### Assets
 
