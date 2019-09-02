@@ -1,6 +1,7 @@
 # My Symfony development step by step
 # Мой опыт разработки на фреймворке Symfony. Шаг за шагом.
 
+№№№№№ (материал редактируется!!! )
 
 Цели и задачи.
 1. Развернуть рабочее окружение для разработки мультиязычного блога на фреймворке Symfony на локальной машине.
@@ -71,7 +72,7 @@ touch docker-compose.yml
 development
     nginx/
         conf.d/
-            [project-name].conf
+            symfony.conf
         Dockerfile
         nginx.conf
     php/
@@ -380,6 +381,12 @@ http://sf4blog.dockerhost/
 
 Поздавляю Вас! Наше окружение готово к установке шаблона Symfony!
 
+Также мы можем посмотреть некоторые показатели нашего окружения :
+```
+http://sf4blog.dockerhost/info.php
+```
+
+
 Отметимся в git^
 
 ```
@@ -423,7 +430,40 @@ make down
 make restart
 ```
 
+### Начинаем процесс разработки
 
+Можно, конечно, сразу установить каркас включающий наиболее полный набор инструментов для разработки на Symfony
+ 
+Но мы начнём с минимального пакета для запуска приложения
+
+
+```
+make down
+```
+Удалим папку /app из проекта для установки шаблона Symfony
+Заходим в терминал и выполняем:
+
+```
+composer create-project symfony/skeleton ./app
+```
+
+
+```
+docker-compose run --rm sf-php-cli composer create-project 
+```
+
+Снова запускаем в терминале docker-compose:
+
+```
+make up
+```
+
+Вводим в командной строке браузера:
+```
+http://sf4blog.dockerhost/
+```
+
+Отлично! Стартовая страница нашего приложения успешно загружается
 
 
 
