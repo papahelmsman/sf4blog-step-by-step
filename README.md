@@ -6,12 +6,19 @@
 Цели и задачи.
 1. Развернуть рабочее окружение для разработки мультиязычного блога на фреймворке Symfony на локальной машине.
 2. Использовать в работе самые свежие или близкие к ним инструменты разработки
-    Nginx 1.
+    Nginx 1.17 +
+    PHP 7.3 +
+    PostgreSQL 12 +
 
 Предвариетльные требования
 
 1. Установка рабочего окружения
+
+
 2. Настройка программного обеспечения
+
+
+
 
 ....
 
@@ -464,6 +471,60 @@ http://sf4blog.dockerhost/
 ```
 
 Отлично! Стартовая страница нашего приложения успешно загружается
+
+В первую очередь выпоним некоторые настройки
+
+1. PhpStorm
+
+Настройка плагинов 
+
+Symfony Plugin
+PHP Toolbox
+PHP Annotations
+
+Key Promoter X
+
+
+2. 
+
+Чтобы убедиться, что наше приложение не имеет установленных зависимостей с известными уязвимостями безопасности, установим следующий пакет:
+```
+docker-compose run --rm sf-php-cli composer require --dev roave/security-advisories:dev-master
+```
+
+```
+docker-compose run --rm sf-php-cli composer require sec-checker
+```
+
+Пробуем:
+```
+docker-compose run --rm sf-php-cli ./bin/console security:check
+```
+или то же самое более коротко с использованием утилиты make:
+```
+make sf-sec-check
+```
+
+Получаем:
+```
+Symfony Security Check Report
+=============================
+
+No packages have known vulnerabilities.
+```
+
+
+
+```
+docker-compose run --rm sf-php-cli composer require twig
+```
+
+
+
+
+
+
+
 
 
 
