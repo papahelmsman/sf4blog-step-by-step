@@ -1,16 +1,21 @@
-# My Symfony development step by step
 # Мой опыт разработки на фреймворке Symfony. Шаг за шагом.
 
-##### (материал редактируется!!! )
+##### (материал редактируется!!!)
 
 Цели и задачи.
 1. Развернуть рабочее окружение для разработки мультиязычного блога на фреймворке Symfony на локальной машине.
 2. Использовать в работе самые свежие или близкие к ним инструменты разработки
+
     Nginx 1.17 +
+    
     PHP 7.3 +
+    
     PostgreSQL 11.2 +
+    
     Redis 5
+    
     NodeJS 
+    
 
 Предвариетльные требования
 
@@ -33,6 +38,7 @@
 
 File > New Project ... 
 
+<p><img src="assets/img_001.png" alt=""></p>
 [Img_001]
 
 Указываем имя проекта и создаём его нажатием кнопки 'CREATE'*. 
@@ -76,7 +82,10 @@ Docker Docs:[(https://docs.docker.com/get-started/)]
 touch docker-compose.yml
 ```
 
-Сщздаём директорию **docker**, а в ней - следующие вложенные директории и файлы:
+здесь же создадим директорию **docker**, в которой мы будем хранить настройки нашего окружения для разработки (вложенаая директория 'development') и деплоя нашего проекта (вложенная директория 'production').
+
+Директорию **production** пока оставим пустой до момента настройки деплоя проекта, а в директории **development** расположим вложения согласно следующей схеме:
+
 ```
 development
     nginx/
@@ -88,29 +97,14 @@ development
         7.3/
             cli/
                 Dockerfile
-                
+                xdebug.ini
             fpm/
                 Dockerfile
                 
 production
 ```
 
-Поддтректорию **production** оставим пустой до мемента настройки деплоя проекта.
-
-А в поддиректорию **development** создадим контент с соответствии с вышеуказанным деревом.
-
-##### //docker/development/nginx/Dockerfile
-```
-FROM nginx:1.17.2-alpine
-
-LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
-
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY conf.d/symfony.conf /etc/nginx/conf.d/symfony.conf
-RUN rm /etc/nginx/conf.d/default.conf
-
-WORKDIR /app
-```
+Для сборки сервиса nginx наполним два конфигурационных файла nginx.conf и /conf.d/symfony.conf сделующими блоками и директивами:
 
 ##### //docker/development/nginx/conf.d/symfony.conf
 ```
@@ -169,6 +163,44 @@ http {
 }
 ```
 
+Теперь мы  можем настроить Dockerfile для сервера nginx.
+
+##### //docker/development/nginx/Dockerfile
+```
+FROM nginx:1.17.2-alpine
+
+LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
+
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY conf.d/symfony.conf /etc/nginx/conf.d/symfony.conf
+RUN rm /etc/nginx/conf.d/default.conf
+
+WORKDIR /app
+```
+
+Теперь создадим файл сборки для PHP-FPM (сервиса менеджера процессов FastCGI), где установим дополнительные пакеты для корректной работы СУБД redis и СУБД PostgreSQL 
+
+##### //docker/development/php/7.3/fpm/Dockerfile
+```
+FROM php:7.3-fpm
+
+LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
+
+RUN pecl install -o -f redis \
+    && rm -rf /tmp/pear \
+    && docker-php-ext-enable redis
+
+RUN apt-get update && apt-get install -y libpq-dev \
+    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install pdo_pgsql
+
+WORKDIR /app
+```
+
+Далее, займёмся настройкой сборки сервиса PHP-CLI (интерфейса командной строки для дальнейшей разработки).
+
+Он дополнится настройками системы профилирования и отладки **xdebug**
+
 ##### //docker/development/php/7.3/cli/xdebug.ini
 ```
 xdebug.remote_enable=1
@@ -177,6 +209,12 @@ xdebug.remote_autostart=1
 xdebug.remote_connect_back=0
 xdebug.idekey=editor-xdebug
 ```
+
+и пакетного менеджера **composer**
+
+Также установим переменную окружения **COMPOSER_ALLOW_SUPERUSER** чтобы  composer не ругался на /root/super user
+
+В итоге, получим следующий файл сборки PHP-CLI:
 
 ##### //docker/development/php/7.3/cli/Dockerfile
 ```
@@ -203,50 +241,14 @@ ENV COMPOSER_ALLOW_SUPERUSER 1
 WORKDIR /app
 ```
 
-##### //docker/development/php/7.3/fpm/Dockerfile
-```
-FROM php:7.3-fpm
+Для других сервисов мы ока воспользуемся готовыми официальными сборками без дополнительных настроек.
 
-LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
-
-RUN pecl install -o -f redis \
-    && rm -rf /tmp/pear \
-    && docker-php-ext-enable redis
-
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-    && docker-php-ext-install pdo_pgsql
-
-WORKDIR /app
-```
-
-
-
+Поэтому, возьмёмся за файл **docker-compose.yml**
 
 Файл **docker-compose.yml** наполняем следующим содержанием:
-```
-//
 
-# версия файла docker-compose
-version: "3.7"
-
-# раздел настройки сервисов
-services:
-  # Сервер Nginx
-  nginx:
-    # параметры конфигурации
-    build:
-      # путь к контексту сборки
-      context: ./docker/development/nginx
-      # имя файла для сборки (директива имеет место быть, когда мы изменяем стандартное имя файла сборки [Dockefile] на любое другое, например, [nginx.docker]
-      dockerfile: Dockerfile
-      
-
-```
-
-Если убрать комментарии и немного сократить запись, конфигурационный файл будет выглядеть примерно так:
-
-```
+##### //docker-compose.yml
+```yaml
 version: "3.7"
 services:
   sf-nginx:
@@ -268,7 +270,7 @@ services:
       - sf-redis
       - sf-queue-redis
   sf-php-cli:
-    build: ./docker/dev/php/7.3/cli
+    build: ./docker/development/php/7.3/cli
     container_name: sf-php-cli
     volumes:
       - ./app:/app
@@ -281,7 +283,7 @@ services:
       - "9000:9001"
   sf-queue-worker:
     build:
-      context: ./docker/dev/php/7.3/cli
+      context: ./docker/development/php/7.3/cli
     container_name: sf-queue-worker
     volumes:
       - ./app:/app:rw,cached
@@ -349,8 +351,12 @@ volumes:
   queue-redis:
   composer:
 ```
-Создадим директорию **app** для кода нашего приложения
-Затем добавим файлы index.php и info.php в каталоге /public для тестирования работы нашего окружения
+
+Конфигурационный файл **docker-compose.yml** с подробными комментариями можно посмотреть **здесь**
+
+Чтобы проверить работу "поднятого" работчего окружения, создадим директорию **app** для кода нашего приложения
+
+Затем добавим файлы index.php и info.php в каталоге /public для тестирования работы окружения
 
 ##### //app/public/index.php
 ```php
@@ -364,14 +370,18 @@ echo 'Congratulations! It works!!!';
 phpinfo();
 ```
 
-Добавим в host-файл системы наш локальный домен
+Добавим в host-файл системы наш локальный домен, указав отличный от 127.0.0.1 IP-адрес (если вы используемте docker-machine) и допустимое имя локального хоста на Ваше усмотрение 
+
 ```
 192.168.99.100 sf4blog.dockerhost
 ```
 
+Окей! Пробуем собрать...
 ```
 docker-compose build
 ```
+
+... и запустить наши контейнеры
 
 ```
 docker-compose up -d
@@ -384,19 +394,22 @@ docker-compose up -d
 http://sf4blog.dockerhost/
 ```
 
-и  получаем:
+и получаем корректно отработавший скрипт **index.php**.
 
-**Congratulations! It works!!!**
+<hr>
 
 Поздавляю Вас! Наше окружение готово к установке шаблона Symfony!
 
-Также мы можем посмотреть некоторые показатели нашего окружения :
+Также мы можем посмотреть некоторые показатели нашего окружения по адресу:
 ```
 http://sf4blog.dockerhost/info.php
 ```
 
+<hr>
 
-Отметимся в git^
+
+Отметимся в git. 
+> Постоянное сохранение изменений в git-репозиторий каждрй атомарной операции нашей разработки, без сомнения, является хорошим тоном.
 
 ```
 git status
@@ -439,13 +452,92 @@ make down
 make restart
 ```
 
-### Начинаем процесс разработки
+##### //Makefile
+```makefile
+up: docker-up
+down: docker-down
+restart: docker-down docker-up
+init: docker-down-clear sf-clear docker-pull docker-build docker-up sf-init
+test: sf-test
+test-coverage: sf-test-coverage
+test-unit: sf-test-unit
+test-unit-coverage: sf-test-unit-coverage
+
+docker-up:
+	docker-compose up -d
+
+docker-down:
+	docker-compose down --remove-orphans
+
+docker-down-clear:
+	docker-compose down -v --remove-orphans
+
+docker-pull:
+	docker-compose pull
+
+docker-build:
+	docker-compose build
+
+sf-sec-check:
+	docker-compose run --rm sf-php-cli ./bin/console security:check
+
+sf-init: sf-composer-install sf-assets-install sf-oauth-keys sf-wait-db sf-migrations sf-fixtures sf-ready
+
+sf-clear:
+	docker run --rm -v ${PWD}/app:/app --workdir=/app alpine rm -f .ready
+
+sf-composer-install:
+	docker-compose run --rm sf-php-cli composer install
+
+sf-assets-install:
+	docker-compose run --rm sf-node yarn install
+	docker-compose run --rm sf-node npm rebuild node-sass
+
+sf-oauth-keys:
+	docker-compose run --rm sf-php-cli mkdir -p var/oauth
+	docker-compose run --rm sf-php-cli openssl genrsa -out var/oauth/private.key 2048
+	docker-compose run --rm sf-php-cli openssl rsa -in var/oauth/private.key -pubout -out var/oauth/public.key
+	docker-compose run --rm sf-php-cli chmod 644 var/oauth/private.key var/oauth/public.key
+
+sf-wait-db:
+	until docker-compose exec -T sf-postgres pg_isready --timeout=0 --dbname=app ; do sleep 1 ; done
+
+sf-migrations:
+	docker-compose run --rm sf-php-cli php bin/console doctrine:migrations:migrate --no-interaction
+
+sf-fixtures:
+	docker-compose run --rm sf-php-cli php bin/console doctrine:fixtures:load --no-interaction
+
+sf-ready:
+	docker run --rm -v ${PWD}/app:/app --workdir=/app alpine touch .ready
+
+sf-assets-dev:
+	docker-compose run --rm sf-node npm run dev
+
+sf-test:
+	docker-compose run --rm sf-php-cli php bin/phpunit
+
+sf-test-coverage:
+	docker-compose run --rm sf-php-cli php bin/phpunit --coverage-clover var/clover.xml --coverage-html var/coverage
+
+sf-test-unit:
+	docker-compose run --rm sf-php-cli php bin/phpunit --testsuite=unit
+
+sf-test-unit-coverage:
+	docker-compose run --rm sf-php-cli php bin/phpunit --testsuite=unit --coverage-clover var/clover.xml --coverage-html var/coverage
+
+```
+
+
+
+
+## Начинаем процесс разработки
 
 Можно, конечно, сразу установить каркас включающий наиболее полный набор инструментов для разработки на Symfony
  
-Но мы начнём с минимального пакета для запуска приложения
+Но мы начнём с минимального пакета **symfony** для запуска приложения
 
-
+Для этого 
 ```
 make down
 ```
