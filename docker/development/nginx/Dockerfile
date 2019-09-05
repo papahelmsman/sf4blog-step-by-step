@@ -1,6 +1,6 @@
-FROM nginx:1.17.2-alpine
+FROM nginx:latest
 
-LABEL maintainer="Pavel A. Petrovv <papahelmsman@gmail.com>"
+LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY conf.d/symfony.conf /etc/nginx/conf.d/symfony.conf

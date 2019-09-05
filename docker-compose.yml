@@ -7,55 +7,39 @@ services:
       - "80:80"
     volumes:
       - ./app/public:/app/public:ro
-    depends_on:
+    links:
       - sf-php-fpm
   sf-php-fpm:
     build: ./docker/development/php/7.3/fpm
     container_name: sf-php-fpm
     volumes:
       - ./app:/app:rw,cached
-    depends_on:
+    links:
       - sf-db
       - sf-redis
-      - sf-queue-redis
   sf-php-cli:
     build: ./docker/development/php/7.3/cli
     container_name: sf-php-cli
     volumes:
-      - ./app:/app
+      - ./app:/app:rw,cached
       - composer:/root/.composer/cache
-    depends_on:
+      - /app/var/
+      - /app/var/cache/
+      - /app/var/logs/
+      - /app/var/sessions/
+    links:
       - sf-db
       - sf-redis
-      - sf-queue-redis
     ports:
       - "9000:9001"
-  sf-queue-worker:
-    build:
-      context: ./docker/development/php/7.3/cli
-    container_name: sf-queue-worker
-    volumes:
-      - ./app:/app:rw,cached
-      - composer:/root/.composer/cache
-    depends_on:
-      - sf-db
-      - sf-redis
-      - sf-queue-redis
-    command: sh -c "until [ -f .ready ] ; do sleep 1 ; done && php bin/console messenger:consume async -vv"
-  sf-node-watch:
-    image: node:12.7-alpine
-    container_name: sf-node-watch
-    volumes:
-      - ./app:/app:rw,cached
-    working_dir: /app
-    command: sh -c "until [ -f .ready ] ; do sleep 1 ; done && npm run watch"
-
+    tty: true
   sf-node:
     image: node:12.7-alpine
     container_name: sf-node
     volumes:
       - ./app:/app:rw,cached
     working_dir: /app
+    tty: true
   sf-db:
     image: postgres:11.2-alpine
     container_name: sf-db
@@ -70,7 +54,7 @@ services:
   sf-adminer:
     image: adminer
     container_name: sf-adminer
-    depends_on:
+    links:
       - sf-db
     restart: always
     ports:
@@ -89,13 +73,7 @@ services:
       - '--save 300 10'
       - '--save 60 10000'
       - '--requirepass secret'
-  sf-queue-redis:
-    image: redis:5.0-alpine
-    container_name: sf-queue-redis
-    volumes:
-      - queue-redis:/data
 volumes:
   db-data:
   redis:
-  queue-redis:
   composer:
