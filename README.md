@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/papahelmsman/sf4blog-step-by-step/docs/assets/images/SfBlog.png" alt="logo"></p>
+<p align="center"><img src="https://github.com/papahelmsman/sf4blog-step-by-step/blob/master/docs/assets/images/SfBlog.png" alt="logo" width="200"></p>
 
 # Building a responsive multilingual blog using Symfony framework and Docker tools, step by step
 
