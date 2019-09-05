@@ -25,7 +25,22 @@
 2. Настройка программного обеспечения
 
 
+**.editorconfig**
 
+```
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*]
+charset = utf-8
+
+[{Dockerfile,docker-compose.yml}]
+indent_style = space
+indent_size = 2
+```
 
 ....
 
@@ -163,7 +178,7 @@ http {
 
 ##### //docker/development/nginx/Dockerfile
 ```dockerfile
-FROM nginx:1.17.2-alpine
+FROM nginx:latest
 
 LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
@@ -174,6 +189,36 @@ RUN rm /etc/nginx/conf.d/default.conf
 WORKDIR /app
 ```
 
+
+##### //docker/development/php/7.3/fpm/xdebug.ini
+```ini
+xdebug.remote_enable=1
+xdebug.remote_port=9000
+xdebug.remote_autostart=0
+xdebug.remote_connect_back=1
+xdebug.max_nesting_level=1200
+xdebug.idekey=PHPSTORM
+```
+
+...
+
+##### //docker/development/php/7.3/fpm/symfony.ini
+```ini
+apc.enable_cli = 1
+date.timezone = Europe/Moscow
+session.auto_start = Off
+short_open_tag = Off
+
+# https://symfony.com/doc/current/performance.html
+opcache.memory_consumption = 256
+opcache.max_accelerated_files = 20000
+opcache.validate_timestamps=0
+realpath_cache_size = 4096K
+realpath_cache_ttl = 600
+```
+
+
+
 Теперь создадим файл сборки для PHP-FPM (сервиса менеджера процессов FastCGI), где установим дополнительные пакеты для корректной работы СУБД redis и СУБД PostgreSQL 
 
 ##### //docker/development/php/7.3/fpm/Dockerfile
@@ -182,13 +227,32 @@ FROM php:7.3-fpm
 
 LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
+ARG APCU_VERSION=5.1.11
+
+RUN apt-get update && apt-get install -y git zip unzip libzip-dev zlib1g-dev libpq-dev git-core libmcrypt-dev \
+    libfcgi0ldbl gnupg libfreetype6-dev libjpeg62-turbo-dev libpng-dev libicu-dev wget
+
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install pdo_pgsql \
+    && docker-php-ext-install opcache \
+    && docker-php-ext-install intl \
+    && docker-php-ext-install mbstring
+
+RUN pecl install apcu-${APCU_VERSION} \
+    && docker-php-ext-enable apcu
+
 RUN pecl install -o -f redis \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis
 
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-    && docker-php-ext-install pdo_pgsql
+RUN pecl install xdebug-beta \
+    && docker-php-ext-enable xdebug
+
+COPY xdebug.ini /usr/local/etc/php/conf.d/
+COPY symfony.ini /usr/local/etc/php/conf.d/
+
+COPY xdebug.ini /usr/local/etc/php/conf.d/
+COPY symfony.ini /usr/local/etc/php/conf.d/
 
 WORKDIR /app
 ```
@@ -201,10 +265,30 @@ WORKDIR /app
 ```ini
 xdebug.remote_enable=1
 xdebug.remote_port=9000
-xdebug.remote_autostart=1
-xdebug.remote_connect_back=0
-xdebug.idekey=editor-xdebug
+xdebug.remote_autostart=0
+xdebug.remote_connect_back=1
+xdebug.max_nesting_level=1200
+xdebug.idekey=PHPSTORM
 ```
+
+настроками **php.ini**
+
+##### //docker/development/php/7.3/fpm/symfony.ini
+```ini
+apc.enable_cli = 1
+date.timezone = Europe/Moscow
+session.auto_start = Off
+short_open_tag = Off
+
+# https://symfony.com/doc/current/performance.html
+opcache.memory_consumption = 256
+opcache.max_accelerated_files = 20000
+opcache.validate_timestamps=0
+realpath_cache_size = 4096K
+realpath_cache_ttl = 600
+```
+
+
 
 и пакетного менеджера **composer**
 
@@ -218,24 +302,51 @@ FROM php:7.3-cli
 
 LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
+ARG APCU_VERSION=5.1.11
+
+RUN apt-get update && apt-get install -y git zip unzip libzip-dev zlib1g-dev libpq-dev git-core libmcrypt-dev \
+    libfcgi0ldbl gnupg libfreetype6-dev libjpeg62-turbo-dev libpng-dev libicu-dev wget
+
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install pdo_pgsql \
+    && docker-php-ext-install opcache \
+    && docker-php-ext-install intl \
+    && docker-php-ext-install mbstring
+
+RUN pecl install apcu-${APCU_VERSION} \
+    && docker-php-ext-enable apcu
+
 RUN pecl install -o -f redis \
     && rm -rf /tmp/pear \
     && docker-php-ext-enable redis
 
-RUN apt-get update && apt-get install -y libpq-dev unzip \
-    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-    && docker-php-ext-install pdo_pgsql \
-    && pecl install xdebug-2.7.2 \
+RUN pecl install xdebug-beta \
     && docker-php-ext-enable xdebug
 
-COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+COPY xdebug.ini /usr/local/etc/php/conf.d/
+COPY symfony.ini /usr/local/etc/php/conf.d/
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/bin --filename=composer --quiet
 
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
+RUN echo 'alias sf="php bin/console"' >> ~/.bashrc
+
 WORKDIR /app
 ```
+
+Обратим внимание на строку, которая добавит удобную консольную команду **sf** вместо **php bin/console** :
+
+``` dockerfile
+RUN echo 'alias sf="php bin/console"' >> ~/.bashrc
+```
+
+Здесь же можно добавить другие псевдонимы, необходимые для удобства Вашей работы.
+
+
+
+
+
 
 Для других сервисов мы ока воспользуемся готовыми официальными сборками без дополнительных настроек.
 
@@ -1050,8 +1161,41 @@ DATABASE_URL=pgsql://symfonist:secret@192.168.99.100:54321/blog_db
 Мы используем Symfony-Flex, поэтому установка будет, ка обычно, проста:
 
 ``` bash
-docker-compose exec sf-php-cli composer require symfony/security-bundle
+docker-compose exec sf-php-cli composer require security
 ```
+
+```
+git status
+```
+
+```
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   .gitignore
+        modified:   composer.json
+        modified:   composer.lock
+        modified:   config/bundles.php
+        modified:   symfony.lock
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        .env.test
+        bin/phpunit
+        config/packages/security.yaml
+        phpunit.xml.dist
+        tests/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+
+
+
+
 
 
 #### Переводы
@@ -1075,11 +1219,388 @@ docker-compose exec sf-php-cli composer require symfony/translation
 docker-compose exec sf-php-cli composer require --dev symfony/phpunit-bridge
 ```
 
+``` 
+git status
+```
+
+
+```
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   .gitignore
+        modified:   composer.json
+        modified:   composer.lock
+        modified:   symfony.lock
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        .env.test
+        bin/phpunit
+        phpunit.xml.dist
+        tests/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+
+
+```
+git add .
+git commit -m "Adding Security System to our Blog"
+```
+
+
+
+
+#### Отправка сообщений
+
+> Symfony предоставляет функцию почтовой программы на основе популярной библиотеки Swift Mailer через SwiftMailerBundle. 
+> Эта почтовая программа поддерживает отправку сообщений с ваших собственных почтовых серверов.
+
+Однако мы будем использовать экспериментальный компонент Mailer от Symfony.
+
+Для начала установим его:
+
+```
+docker-compose exec sf-php-cli composer req symfony/mailer
+```
+
+Посмотрим на изменения в нашем проекте:
+
+``` bash
+git status
+```
+
+```
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   app/.env
+        modified:   app/composer.json
+        modified:   app/composer.lock
+        modified:   app/symfony.lock
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        app/config/packages/mailer.yaml
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+C:\Users\papahelmsman\Business\Projects\ssss>
+
+```
 
 
 
 
 
+
+
+
+
+## Разработка
+
+
+
+Создадим контроллер  BlogController с помощью утилиты **make**
+
+```
+docker-compose exec sf-php-cli ./bin/console make:controller BlogController
+```
+
+В результате мы получим два сгенерированных файла:
+- файл контрроллера **//app/src/Controller/BlogController.php**
+- файл шаблона для соержимого ответа **//app/templates/blog/index.html.twig**
+
+Из файла **index.html.twig** видно, что он наследует базовый шаблон **base.html.twig**
+
+Давайте немного поработаем над ним.
+
+Но прежде, чем начать эту работу, добавим в наш проект **Webpack-Encore** - можный инструмент для сброки CSS, JS и  некоторых других эелементов нашего проекта.
+
+Выполним установку следующей командой:
+
+```
+docker-compose exec sf-php-cli compose req encore
+```
+
+Посмотрим, что данная установка добавила в наш проект
+
+```
+git status
+```
+
+
+```
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   app/.gitignore
+        modified:   app/composer.json
+        modified:   app/composer.lock
+        modified:   app/config/bundles.php
+        modified:   app/symfony.lock
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        app/assets/
+        app/config/packages/assets.yaml
+        app/config/packages/prod/webpack_encore.yaml
+        app/config/packages/webpack_encore.yaml
+        app/package.json
+        app/webpack.config.js
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+
+Заглянув в файл **/app/package.json**, мы увидим некоторые зависимости, указанные по умолчанию для нашей дальнейшей разработки.
+
+Эти пакеты установятся в наш проект в каталог **/app/node_modules** после перехода в терминале в директорию **/app** и выполнения команды **yarn** 
+
+Файл **.gitignore** поолнился  секцией настройки **Webpack-Encore** с указанием неотслеживаемых файлов.
+
+Теперь нас интересует каталог **assets**, расположенный в корне нашего приложения **app**.
+
+Сюда мы будем складывать все файлы стилей, скрипты, изображения, шрифты.
+
+Здесь же мы будем "подтягивать" к нашему проекту различные фреймворки и библиотеки, такие как jQuery, Bootstrap и многое другое.
+
+С помощью инструментов Webpack-Encore мв будем собирать и оптимизировать файлы, необходимые в нашем проекте, после чего будем помещать их в каталог **/public/build** нашего приложения.
+
+Эти настроойки необходимо выполнить в файле **/app/webpack.config.js**.
+
+``` js
+var Encore = require('@symfony/webpack-encore');
+
+// Manually configure the runtime environment if not already configured yet by the "encore" command.
+// It's useful when you use tools that rely on webpack.config.js file.
+if (!Encore.isRuntimeEnvironmentConfigured()) {
+    Encore.configureRuntimeEnvironment(process.env.NODE_ENV || 'dev');
+}
+
+Encore
+    // directory where compiled assets will be stored
+    .setOutputPath('public/build/')
+    // public path used by the web server to access the output path
+    .setPublicPath('/build')
+    // only needed for CDN's or sub-directory deploy
+    //.setManifestKeyPrefix('build/')
+
+    /*
+     * ENTRY CONFIG
+     *
+     * Add 1 entry for each "page" of your app
+     * (including one that's included on every page - e.g. "app")
+     *
+     * Each entry will result in one JavaScript file (e.g. app.js)
+     * and one CSS file (e.g. app.css) if your JavaScript imports CSS.
+     */
+    .addEntry('app', './assets/js/app.js')
+    //.addEntry('page1', './assets/js/page1.js')
+    //.addEntry('page2', './assets/js/page2.js')
+
+    // When enabled, Webpack "splits" your files into smaller pieces for greater optimization.
+    .splitEntryChunks()
+
+    // will require an extra script tag for runtime.js
+    // but, you probably want this, unless you're building a single-page app
+    .enableSingleRuntimeChunk()
+
+    /*
+     * FEATURE CONFIG
+     *
+     * Enable & configure other features below. For a full
+     * list of features, see:
+     * https://symfony.com/doc/current/frontend.html#adding-more-features
+     */
+    .cleanupOutputBeforeBuild()
+    .enableBuildNotifications()
+    .enableSourceMaps(!Encore.isProduction())
+    // enables hashed filenames (e.g. app.abc123.css)
+    .enableVersioning(Encore.isProduction())
+
+    // enables @babel/preset-env polyfills
+    .configureBabel(() => {}, {
+        useBuiltIns: 'usage',
+        corejs: 3
+    })
+
+    // enables Sass/SCSS support
+    //.enableSassLoader()
+
+    // uncomment if you use TypeScript
+    //.enableTypeScriptLoader()
+
+    // uncomment to get integrity="..." attributes on your script & link tags
+    // requires WebpackEncoreBundle 1.4 or higher
+    //.enableIntegrityHashes(Encore.isProduction())
+
+    // uncomment if you're having problems with a jQuery plugin
+    //.autoProvidejQuery()
+
+    // uncomment if you use API Platform Admin (composer req api-admin)
+    //.enableReactPreset()
+    //.addEntry('admin', './assets/js/admin.js')
+;
+
+module.exports = Encore.getWebpackConfig();
+```
+
+Закомментируем строку:
+
+```
+.enableSingleRuntimeChunk()
+```
+
+и добавим вместо неё:
+
+```
+.disableSingleRuntimeChunk()
+```
+
+Попробуем выполнить команду:
+
+```
+yarn encore dev
+```
+
+После успешного ее выполнения мы увидим новый каталог **//app/public/build/** с файлами стилей и скриптов, которые мы подключаем к базовому шаблону **base.html.twig**.
+
+Подключаем стили. Вместо ...
+
+``` twig
+{% block stylesheets %}{% endblock %}
+```
+
+... получаем:
+
+``` twig
+{% block stylesheets %}
+    {{ encore_entry_link_tags('app') }}
+{% endblock %}
+```
+
+Подключаем скрипты. Вместо ...
+
+``` twig
+{% block javascripts %}{% endblock %}
+```
+
+... получаем:
+
+``` twig
+{% block javascripts %}
+    {{ encore_entry_script_tags('app') }}
+{% endblock %}
+```
+
+В результате после перезагрузки страницы 
+
+``` http request 
+http://sf4blog.dockerhost/blog
+```
+
+мы заметим изменение фона страницы на цвет указанный нами в файле **//app/assets/css/app.css**
+
+~~~ css
+body {
+    background-color: lightgray;
+}
+~~~
+
+```
+yarn add sass-loader@^7.0.1 node-sass --dev
+```
+
+Откроем файл **webpack.config.js** и раскомментируем строку:
+
+``` js
+.enableSassLoader()
+```
+
+
+
+
+
+Итак, возьмём наш базовый шаблон **base.html.twig**
+
+Добавим мета-тэг **viewort** 
+
+```
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+```
+
+
+
+Добавим в него обшую для всего проекта иконку для закладок браузера **favicon.ico**
+
+```
+
+```
+
+
+
+```
+require('../css/app.css');
+```
+
+
+```
+import('../scss/app.scss');
+```
+
+
+```
+yarn add bootstrap --dev
+```
+
+```
+yarn add holderjs --dev
+```
+
+```
+yarn add popper.js --dev
+```
+
+
+
+```
+yarn add jquery --dev
+```
+
+
+
+Для определения наших собственных переменных и переопределения переменных bootstrap оздадим файл **//app/assets/scss/helper/_variables.scss**
+
+Добавим в него первые переменные:
+
+```
+$info: darken(#17a2b8, 10%);
+$logo-color: #4056ff;
+```
+
+
+
+
+```
+yarn add font-awesome --dev
+```
+
+
+#### Header and Footer
+
+Импорт шапки и подвала сайта
 
 
 
