@@ -273,10 +273,10 @@ http {
 }
 ```
 
-Теперь мы  можем настроить Dockerfile для сервера nginx.
+Теперь мы  можем настроить Dockerfile для сервера NGINX.
 
 ##### //docker/development/nginx/Dockerfile
-```dockerfile
+``` dockerfile
 FROM nginx:latest
 
 LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
@@ -288,9 +288,10 @@ RUN rm /etc/nginx/conf.d/default.conf
 WORKDIR /app
 ```
 
+Далее,  подготовим файлы настроек для контейнеров PHP.
 
 ##### //docker/development/php/7.3/fpm/xdebug.ini
-```ini
+```
 xdebug.remote_enable=1
 xdebug.remote_port=9000
 xdebug.remote_autostart=0
@@ -346,9 +347,6 @@ RUN pecl install -o -f redis \
 
 RUN pecl install xdebug-beta \
     && docker-php-ext-enable xdebug
-
-COPY xdebug.ini /usr/local/etc/php/conf.d/
-COPY symfony.ini /usr/local/etc/php/conf.d/
 
 COPY xdebug.ini /usr/local/etc/php/conf.d/
 COPY symfony.ini /usr/local/etc/php/conf.d/
@@ -441,9 +439,6 @@ RUN echo 'alias sf="php bin/console"' >> ~/.bashrc
 ```
 
 Здесь же можно добавить другие псевдонимы, необходимые для удобства Вашей работы.
-
-
-
 
 
 
@@ -746,7 +741,7 @@ sf-test-unit-coverage:
  
 Но мы начнём с минимального пакета **symfony/skeleton** для более чёткого понимания процесса.
 
-Для этого остановим наши контейнеры. Используя **Makefile** мы можем сделать это просто:
+Для этого остановим наши контейнеры. Используя **Makefile** мы можем сделать это из терминала PhpStorm, находясь в корне нашего проекта:
 
 ``` bash
 make down
@@ -764,7 +759,7 @@ make down
 composer create-project symfony/skeleton ./app
 ```
 
-Снова запускаем в терминале docker-compose:
+Снова запускаем в терминале наше  docker-окружение:
 
 ```
 make up

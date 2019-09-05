@@ -26,7 +26,4 @@ RUN pecl install xdebug-beta \
 COPY xdebug.ini /usr/local/etc/php/conf.d/
 COPY symfony.ini /usr/local/etc/php/conf.d/
 
-COPY xdebug.ini /usr/local/etc/php/conf.d/
-COPY symfony.ini /usr/local/etc/php/conf.d/
-
 WORKDIR /app
