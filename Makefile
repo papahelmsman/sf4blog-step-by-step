@@ -22,9 +22,6 @@ docker-pull:
 docker-build:
 	docker-compose build
 
-sf-sec-check:
-	docker-compose run --rm sf-php-cli ./bin/console security:check
-
 sf-init: sf-composer-install sf-assets-install sf-oauth-keys sf-wait-db sf-migrations sf-fixtures sf-ready
 
 sf-clear:
