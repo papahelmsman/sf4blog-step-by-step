@@ -878,15 +878,51 @@ Symfony рекомендует использовать аннотации. Эт
 rm -rf /app/var/cache/dev/*
 ```
 
-Установим пакеты **annotations**
+Идём в консоль PHP-CLI и устанавливаем пакеты **annotations**
+
 ```
 composer req annotations
 ```
 
+Переходим в консоль проекта и смотрим измегения
 
 ```
 git status
 ```
+
+Видим::
+
+```
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   app/composer.json
+        modified:   app/composer.lock
+        modified:   app/config/bundles.php
+        modified:   app/symfony.lock
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        app/config/packages/sensio_framework_extra.yaml
+        app/config/routes/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+
+Сохраняем в Git
+
+```
+git add .
+git commit -m "Adding Annotations package"
+```
+
+
 
 #### Создание маршрутов
 
