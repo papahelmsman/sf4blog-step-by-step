@@ -6,16 +6,16 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./app/public:/app/public:ro
-      - ./logs/nginx:/var/log/nginx:cached
+      - ./app/public:/usr/src/app/public:ro
+      - ./logs/nginx:/var/log/nginx
     links:
       - sf-php-fpm
   sf-php-fpm:
     build: ./docker/development/php/7.3/fpm
     container_name: sf-php-fpm
     volumes:
-      - ./app:/app:rw,cached
-      - ./logs/symfony:/var/www/symfony/var/log:cached
+      - ./app:/usr/src/app:rw
+      - ./logs/symfony:/usr/src/app/var/log
     links:
       - sf-db
       - sf-redis
@@ -23,13 +23,10 @@ services:
     build: ./docker/development/php/7.3/cli
     container_name: sf-php-cli
     volumes:
-      - ./app:/app:rw,cached
-      - ./logs/symfony:/var/www/symfony/var/log:cached
+      - ./app:/usr/src/app:rw
+      - ./logs/symfony:/usr/src/app/var/log
       - composer:/root/.composer/cache
-      - /app/var/
-      - /app/var/cache/
-      - /app/var/logs/
-      - /app/var/sessions/
+    # user: "${UID-www-data}:${GID-www-data}"
     links:
       - sf-db
       - sf-redis
@@ -40,9 +37,9 @@ services:
     image: node:12.7-alpine
     container_name: sf-node
     volumes:
-      - ./app:/app:rw,cached
-      - ./logs/symfony:/var/www/symfony/var/log:cached
-    working_dir: /app
+      - ./app:/usr/src/app:rw
+      - ./logs/symfony:/usr/src/app/var/log
+    working_dir: /usr/src/app
     tty: true
   sf-db:
     image: postgres:11.2-alpine

@@ -1559,8 +1559,8 @@ git commit -m "Adding Security System to our Blog"
 
 Для начала установим его:
 
-```
-docker-compose exec sf-php-cli composer req symfony/mailer
+``` bash
+composer req symfony/mailer
 ```
 
 Посмотрим на изменения в нашем проекте:

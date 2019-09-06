@@ -4,11 +4,41 @@ LABEL maintainer="Pavel A. Petrov <papahelmsman@gmail.com>"
 
 ARG APCU_VERSION=5.1.11
 
-RUN apt-get update && apt-get install -y git zip unzip libzip-dev zlib1g-dev libpq-dev git-core libmcrypt-dev \
-    libfcgi0ldbl gnupg libfreetype6-dev libjpeg62-turbo-dev libpng-dev libicu-dev wget
+RUN apt-get update && apt-get install -y \
+    git \
+    zip \
+    unzip \
+    libzip-dev \
+    zlib1g-dev \
+    libpq-dev \
+    git-core \
+    libmcrypt-dev \
+    libfcgi0ldbl \
+    gnupg \
+    libjpeg62-turbo-dev \
+    libicu-dev \
+    wget
+
+# gd extension
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libfreetype6-dev \
+    libjpeg-dev \
+    libxpm-dev \
+    libxml2-dev \
+    libxslt-dev \
+    librabbitmq-dev \
+    libssh-dev \
+    libwebp-dev
+RUN docker-php-ext-configure gd \
+    --with-freetype-dir=/usr/include/ \
+    --with-jpeg-dir=/usr/include/ \
+    --with-xpm-dir=/usr/include/ \
+    --with-webp-dir=/usr/include/
+RUN docker-php-ext-install gd
 
 RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-    && docker-php-ext-install pdo_pgsql \
+    && docker-php-ext-install pdo_pgsql pgsql \
     && docker-php-ext-install opcache \
     && docker-php-ext-install intl \
     && docker-php-ext-install mbstring
@@ -32,4 +62,4 @@ ENV COMPOSER_ALLOW_SUPERUSER 1
 
 RUN echo 'alias sf="php bin/console"' >> ~/.bashrc
 
-WORKDIR /app
+WORKDIR /usr/src/app
