@@ -821,7 +821,7 @@ docker-compose exec sf-php-cli bash
 
 ``` bash
 # используется только при разработке, поэтому используем ключ --dev
-composer req sec-checker --dev
+composer req --dev sec-checker
 ```
 
 Пробуем здесь же:
@@ -857,6 +857,23 @@ git commit -m "Adding Sec-Checker package"
 Возвращаемся в консоль котейнера PHP-CLI
 
 Все следующие установки через **composer** мы продолжим в консоли нашего контейнера PHP-CLI (sf-php-cli)
+
+
+
+#### Компонент Maker
+
+```bash
+composer req --dev maker
+```
+
+
+
+
+
+
+
+
+
 
 ### Маршрутизация / Routing
 
