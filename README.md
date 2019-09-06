@@ -10,4 +10,4 @@
 <br><br>
 <p><img src="docs/assets/images/flags/RU.png" alt=""></p>
 
-*[Russian vresion](docs/guide_ru.md)*
+*[Russian version](docs/guide_ru.md)*

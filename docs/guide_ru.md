@@ -917,10 +917,10 @@ Symfony рекомендует использовать аннотации. Эт
 rm -rf /app/var/cache/dev/*
 ```
 
-Идём в консоль PHP-CLI и устанавливаем пакеты **annotations**
+Идём в консоль PHP-CLI и устанавливаем пакеты **annotations**  (можно использовать псевдоним **annot**)
 
 ```
-composer req annotations
+composer req annot
 ```
 
 Переходим в консоль проекта и смотрим измегения
@@ -948,11 +948,12 @@ Untracked files:
   (use "git add <file>..." to include in what will be committed)
 
         app/config/packages/sensio_framework_extra.yaml
-        app/config/routes/
+        app/config/routes/annotations.yaml
 
 no changes added to commit (use "git add" and/or "git commit -a")
 
 ```
+
 
 Сохраняем в Git
 
