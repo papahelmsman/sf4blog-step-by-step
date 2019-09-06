@@ -1039,6 +1039,41 @@ composer unpack profiler
 
 
 
+```bash
+docker-compose run --rm sf-php-cli composer unpack debug
+```
+
+
+```bash
+composer unpack profiler
+```
+
+```bash
+composer require symfony/orm-pack
+
+composer require --dev doctrine/doctrine-fixtures-bundle
+
+composer require --dev symfony/maker-bundle
+
+composer require symfony/validator doctrine/annotations
+composer req asset
+composer req form
+composer req logger #symfony/monolog-bundle
+composer req tanslations
+composer req intl
+composer req swiftmailer
+composer req test --dev
+composer req encore --dev
+composer req twig
+
+composer require --dev symfony/phpunit-bridge
+
+composer require symfony/webpack-encore-bundle
+yarn install
+
+```
+
+
 
 
 
