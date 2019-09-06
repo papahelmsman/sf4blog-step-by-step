@@ -866,10 +866,32 @@ git commit -m "Adding Sec-Checker package"
 composer req --dev maker
 ```
 
+Смотрим изменения в проект через **git status**:
 
+```
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
 
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
 
+        modified:   app/composer.json
+        modified:   app/composer.lock
+        modified:   app/config/bundles.php
+        modified:   app/symfony.lock
 
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+
+Сохраняем в Git
+
+```
+git add .
+git commit -m "Step - Adding Maker"
+```
 
 
 
