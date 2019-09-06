@@ -792,21 +792,46 @@ composer path
 - Key Promoter X
 
 
-2. 
+Теперь настроим PHP-CLI.
+
+> File > Settings > Languages & Frameworks > PHP
+
+> Cli Interpreter:
+
+> Add > From Docker...
+
+> sf-php-cli
+
+OK
+
+
+> File > Settings > Languages & Frameworks > PHP > Composer
+
+> Img_009.png
 
 
 
-``` bash
-docker-compose run --rm sf-php-cli composer require sec-checker
+Компоненты фреймворка мы можем устанавливать в нашем терминале, но находясь внутри контейнера PHP-CLI. Для этого выполним:
+
+```
+docker-compose exec sf-php-cli bash
 ```
 
-Пробуем:
+и в консоли контейнера установим первый пакет  - инструмент командной строки  **Scurity checker**
 
 ``` bash
-docker-compose run --rm sf-php-cli ./bin/console security:check
+# используется только при разработке, поэтому используем ключ --dev
+composer req sec-checker --dev
+```
+
+Пробуем здесь же:
+
+```
+sf security:check
 ```
 
 Получаем:
+
 ```
 Symfony Security Check Report
 =============================
@@ -816,7 +841,22 @@ No packages have known vulnerabilities.
 
 Отлично! Ни один из установленных пакетов не имеет известных уязвимостей.
 
+Правой кнопкой мыши кликаем по открытому ярлыку терминала и переименовываем его для удобства в 'PHP-CLI'.
+
+Открываем ещё одно окно терминала. Оно открывается, как обычно, в корне нашего проекта. Используем новое окно для работы с Git:
+
+```
+git status
+git add .
+git commit -m "Adding Sec-Checker package"
+```
+
+
 ## Установка основных компонентов
+
+Возвращаемся в консоль котейнера PHP-CLI
+
+Все следующие установки через **composer** мы продолжим в консоли нашего контейнера PHP-CLI (sf-php-cli)
 
 ### Маршрутизация / Routing
 
@@ -834,13 +874,13 @@ Symfony рекомендует использовать аннотации. Эт
 
 
 
-``` bash
-docker-compose run --rm sf-php-cli rm -rf /app/var/cache/dev/*
+```
+rm -rf /app/var/cache/dev/*
 ```
 
 Установим пакеты **annotations**
-``` bash
-docker-compose run --rm sf-php-cli composer require annotations
+```
+composer req annotations
 ```
 
 
