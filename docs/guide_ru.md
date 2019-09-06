@@ -963,6 +963,85 @@ git commit -m "Adding Annotations package"
 
 
 
+#### Компонент отладки в Symfony - Debug
+
+Компонент Debug предоставляет инструменты для облегчения отладки PHP-кода.
+
+Устанавливаем в консоли PHP-CLI:
+
+```bash
+composer req --dev debug
+```
+
+Переходим в консоль проекта и смотрим измегения
+
+```
+git status
+```
+
+Видим:
+
+```
+On branch master
+Your branch is ahead of 'origin/master' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   app/composer.json
+        modified:   app/composer.lock
+        modified:   app/config/bundles.php
+        modified:   app/symfony.lock
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        app/config/packages/dev/debug.yaml
+        app/config/packages/dev/easy_log_handler.yaml
+        app/config/packages/dev/monolog.yaml
+        app/config/packages/dev/web_profiler.yaml
+        app/config/packages/prod/
+        app/config/packages/test/monolog.yaml
+        app/config/packages/test/web_profiler.yaml
+        app/config/packages/twig.yaml
+        app/config/routes/
+        app/templates/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+
+Сохраняем в Git
+
+```
+git add .
+git commit -m "Adding Debug package"
+```
+
+
+
+
+
+
+
+```bash
+docker-compose run --rm sf-php-cli composer unpack debug
+```
+
+
+```bash
+composer unpack profiler
+```
+
+
+
+
+
+
+
+
 #### Создание маршрутов
 
 Раскомментируем строчкм конфигурационного файла **/app/config/routes.yaml**
@@ -1206,25 +1285,6 @@ no changes added to commit (use "git add" and/or "git commit -a")
 
 ```
 
-
-
-#### Компонент отладки в Symfony - Debug
-
-Компонент Debug предоставляет инструменты для облегчения отладки PHP-кода.
-
-Устанавливаем:
-
-```bash
-docker-compose run --rm sf-php-cli composer require debug --dev
-```
-
-```bash
-docker-compose run --rm sf-php-cli composer unpack debug
-```
-
-```bash
-docker-compose run --rm sf-php-cli composer unpack profiler
-```
 
 
 
